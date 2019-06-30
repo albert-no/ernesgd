@@ -7,16 +7,17 @@ import pathlib
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
-
-from torch.utils.data import DataLoader
-import torch.optim as optim
 from torchvision import datasets
+
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
+import torch.optim as optim 
 
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+from ernesgd_custom.ernesgd import ERNESGD
 from ernesgd_utils.dcgan import weights_init_normal, Generator, Discriminator
 import ernesgd_data.fid_score as fid_score
 
@@ -24,9 +25,9 @@ import ernesgd_data.fid_score as fid_score
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
+parser.add_argument("--optimizer", type=str, default='ernesgd',
+        help="optimizer to use, (ernesgd or sgd)")
+parser.add_argument("--lr", type=float, default=0.0002, help="learning rate")
 parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
 parser.add_argument("--img_size", type=int, default=32, help="size of each image dimension")
@@ -34,6 +35,7 @@ parser.add_argument("--channels", type=int, default=1, help="number of image cha
 parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
 parser.add_argument("--no_fid_score", dest='no_fid_score', action='store_true',
         help="skip computing fid_score")
+
 # XXX additionals for FID
 parser.add_argument("--FID_epochs", type=int, default=1,
         help="evaluate the FID score for every FID_epochs epochs")
@@ -45,12 +47,12 @@ parser.set_defaults(no_fid_score=False)
 opt = parser.parse_args()
 if opt.dataset_name == 'CIFAR':
     opt.channels = 3
-    opt.img_size = 64
 print(opt)
 
 # XXX Generate output folders
 folder_names = ['images', 'chk', 'fid', 'temp']
-out_path = os.path.join(*[os.getcwd(), 'outputs', f'sgd_lr{opt.lr}_data{opt.dataset_name}'])
+out_path = os.path.join(*[os.getcwd(), 'outputs',
+    f'{opt.optimizer}_lr{opt.lr}_data{opt.dataset_name}'])
 out_fnames = {}
 for folder_name in folder_names:
     out_fnames[folder_name] = os.path.join(out_path, folder_name)
@@ -93,9 +95,11 @@ dataloader = torch.utils.data.DataLoader(
     shuffle=True,
 )
 
-# Optimizers XXX use SGD
-optimizer_G = optim.SGD(generator.parameters(), lr=opt.lr)
-optimizer_D = optim.SGD(discriminator.parameters(), lr=opt.lr)
+# Optimizers XXX use ERNESGD
+optimizer_dict = {'ernesgd': ERNESGD, 'sgd': optim.SGD}
+selected_optimizer = optimizer_dict[opt.optimizer]
+optimizer_G = selected_optimizer(generator.parameters(), lr=opt.lr)
+optimizer_D = selected_optimizer(discriminator.parameters(), lr=opt.lr)
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
@@ -136,12 +140,31 @@ for epoch in range(opt.n_epochs):
         g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
         g_loss.backward()
-        optimizer_G.step()
+        if opt.optimizer == 'ernesgd':
+            # XXX First half step
+            optimizer_G.half_step()
+
+            # XXX Second half step
+            optimizer_G.zero_grad()
+
+            # Generate a batch of images XXX using same z with first half step
+            gen_imgs = generator(z)
+
+            # Loss measures generator's ability to fool the discriminator
+            g_loss = adversarial_loss(discriminator(gen_imgs), valid)
+
+            g_loss.backward()
+            optimizer_G.full_step()
+        elif opt.optimizer == 'sgd':
+            optimizer_G.step()
+        else:
+            raise ValueError("optimizer should be either 'ernesgd' or 'sgd'")
         
 
         # ---------------------
         #  Train Discriminator
         # ---------------------
+
 
         optimizer_D.zero_grad()
 
@@ -151,7 +174,25 @@ for epoch in range(opt.n_epochs):
         d_loss = (real_loss + fake_loss) / 2
 
         d_loss.backward()
-        optimizer_D.step()
+        if opt.optimizer == 'ernesgd':
+            # XXX First half step
+            optimizer_D.half_step()
+
+            # XXX Second half step
+            optimizer_D.zero_grad()
+
+            # Measure discriminator's ability to classify real from generated samples
+            real_loss = adversarial_loss(discriminator(real_imgs), valid)
+            fake_loss = adversarial_loss(discriminator(gen_imgs.detach()), fake)
+            d_loss = (real_loss + fake_loss) / 2
+
+            d_loss.backward()
+            optimizer_D.full_step()
+        elif opt.optimizer == 'sgd':
+            optimizer_D.step()
+        else:
+            raise ValueError("optimizer should be either 'ernesgd' or 'sgd'")
+
 
         print(
             "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"

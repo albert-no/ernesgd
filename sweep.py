@@ -1,8 +1,10 @@
+import argparse
+import json
 import subprocess
 
 
-def sweep(gpucode, pycode, lr_list, option_dict):
-    cmd_template = f'(CUDA_VISIBLE_DEVICES={gpucode} python {pycode}.py'
+def sweep(gpucode, lr_list, option_dict):
+    cmd_template = f'(CUDA_VISIBLE_DEVICES={gpucode} python run_dcgan.py'
     for key in option_dict:
         cmd_template += f' --{key}={option_dict[key]}'
     cmd_template += ')'
@@ -11,15 +13,22 @@ def sweep(gpucode, pycode, lr_list, option_dict):
 
 
 if __name__ == '__main__':
-    gpucode = 1
-    pycode = 'dcgan_ernest'
-    lr_list = [0.02, 0.04, 0.06, 0.08]
-    option_dict = {'n_cpu': 16,
-            'dataset_name': 'CIFAR',
-            'batch_size': 128,
-            'FID_epochs': 20,
-            'img_size': 32,
-    }
-    sweep(gpucode, pycode, lr_list, option_dict)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--json", type=str, default='sample_parameters.json',
+        help='name of parameters json file')
+    opt = parser.parse_args()
+
+    with open(opt.json) as f:
+        json_data = json.load(f)
+
+    gpucode = json_data['gpucode']
+    lr_list = json_data['lr_list']
+    exceptions = ['gpucode', 'lr_list']
+    option_dict = {}
+    for key in json_data:
+        if key not in exceptions:
+            option_dict[key] = json_data[key]
+
+    sweep(gpucode, lr_list, option_dict)
 
 

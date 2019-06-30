@@ -21,7 +21,17 @@ cd ernesgd_data
 python get_real_images.py
 ```
 
-If you alreaday donwloaded dataset, you can run the command in ``extract statisics only`` mode.
-set ``downloaded=True``
+If you alreaday donwloaded dataset, you can run the command in ``extract statisics only`` mode
+by setting ``downloaded=True``
 
 
+## SWEEP
+The following command will do a parameter sweep.
+```
+python sweep.py sample_parameters.json
+```
+You can create your ``own parameters.json``.
+
+
+## OUTPUT
+Your output will be located in ``outputs``.
