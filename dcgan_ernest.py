@@ -45,7 +45,6 @@ parser.set_defaults(no_fid_score=False)
 opt = parser.parse_args()
 if opt.dataset_name == 'CIFAR':
     opt.channels = 3
-    opt.img_size = 64
 print(opt)
 
 # XXX Generate output folders
