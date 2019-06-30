@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 from torchvision import datasets
 
-import fid_score
+import ernesgd_data.fid_score as fid_score
 
 
 def download_real_images(img_size, batch_size, dataset_name, downloaded=False):
@@ -19,7 +19,7 @@ def download_real_images(img_size, batch_size, dataset_name, downloaded=False):
     selected_dataset = data_dict[dataset_name]
     
     images_fname = dataset_name+'_images'
-    real_images_fname = dataset_name+'real_images'
+    real_images_fname = dataset_name+'_real_images'
     if not downloaded:
         os.makedirs(images_fname, exist_ok=True)
         os.makedirs(real_images_fname, exist_ok=True)
@@ -40,9 +40,9 @@ def download_real_images(img_size, batch_size, dataset_name, downloaded=False):
     
         # Save real images
         for i, (imgs, _) in enumerate(dataloader):
-            print(i)
+            if i%10000 == 0:
+                print(i)
             save_image(imgs, f"./{real_images_fname}/{i}.png", normalize=True)
-            print()
 
     # Calculate stats (mu, Sigma) for generated images
     files = glob(real_images_fname+'/*.jpg') +glob(real_images_fname+'/*.png')
@@ -57,4 +57,5 @@ if __name__ == "__main__":
     img_size = 32
     batch_size = 1
     dataset_name = 'CIFAR'
-    download_real_images(img_size, batch_size, dataset_name, downloaded=True)
+    downloaded = False
+    download_real_images(img_size, batch_size, dataset_name, downloaded=downloaded)

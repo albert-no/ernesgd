@@ -14,7 +14,7 @@ except ImportError:
     # If not tqdm is not available, provide a mock version of it
     def tqdm(x): return x
 
-from .inception import InceptionV3
+from ernesgd_data.inception import InceptionV3
 
 def get_activations(files, model, batch_size=50, dims=2048,
                     cuda=False, verbose=False):

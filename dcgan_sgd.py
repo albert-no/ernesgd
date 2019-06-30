@@ -17,9 +17,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
-
-from utils.gan import weights_init_normal, Generator, Discriminator
-import data.fid_score as fid_score
+from ernesgd_utils.gan import weights_init_normal, Generator, Discriminator
+import ernesgd_data.fid_score as fid_score
 
 
 parser = argparse.ArgumentParser()
