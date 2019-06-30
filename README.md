@@ -28,7 +28,7 @@ by setting ``downloaded=True``
 ## SWEEP
 The following command will do a parameter sweep.
 ```
-python sweep.py sample_parameters.json
+python sweep.py --json=sample_parameters.json
 ```
 You can create your own ``parameters.json``.
 

@@ -2,6 +2,7 @@
     "gpucode": 1,
     "lr_list": [0.02, 0.04, 0.06, 0.08],
     "dataset_name": "CIFAR",
+    "optimizer": "ernesgd",
     "batch_size": 128,
     "FID_epochs": 20,
     "img_size": 32
