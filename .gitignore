@@ -1,0 +1,15 @@
+# output folder
+outputs/*
+
+# build
+build/*
+*/__pycache__
+
+# data related
+ernesgd_data/*images
+
+# statistic files
+*mat
+
+# Temporary files
+*swp
