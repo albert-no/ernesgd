@@ -77,7 +77,7 @@ generator.apply(weights_init_normal)
 discriminator.apply(weights_init_normal)
 
 # Configure data loader
-data_folder_name = f'data/{opt.dataset_name}/'
+data_folder_name = f'ernesgd_data/{opt.dataset_name}/'
 os.makedirs(data_folder_name, exist_ok=True)
 data_dict = {'MNIST': datasets.MNIST,
         'CIFAR': datasets.CIFAR10}
