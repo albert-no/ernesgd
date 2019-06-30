@@ -30,8 +30,8 @@ The following command will do a parameter sweep.
 ```
 python sweep.py sample_parameters.json
 ```
-You can create your ``own parameters.json``.
+You can create your own ``parameters.json``.
 
 
 ## OUTPUT
-Your output will be located in ``outputs``.
+Your output will be located in ``./outputs``.
