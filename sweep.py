@@ -7,9 +7,10 @@ def sweep(gpucode, lr_list, option_dict):
     cmd_template = f'(CUDA_VISIBLE_DEVICES={gpucode} python run_dcgan.py'
     for key in option_dict:
         cmd_template += f' --{key}={option_dict[key]}'
-    cmd_template += ')'
     for lr in lr_list:
-        subprocess.call(cmd_template, shell=True)
+        cmd_run = cmd_template + f' --lr={lr})'
+        print(cmd_run)
+        subprocess.call(cmd_run, shell=True)
 
 
 if __name__ == '__main__':
