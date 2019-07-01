@@ -85,6 +85,7 @@ class ERNESGD(Optimizer):
 
             for p in group['params']:
                 if p.grad is None:
+                    # XXX when does this happen? Should we put an "assert" here?
                     continue
                 d_p = p.grad.data
                 if weight_decay != 0:
