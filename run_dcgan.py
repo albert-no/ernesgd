@@ -160,9 +160,11 @@ for epoch in range(opt.n_epochs):
             # XXX Second half step
             optimizer_G.zero_grad()
 
+            # XXX is it necessary to do this again?
             # Generate a batch of images XXX using same z with first half step
             gen_imgs = generator(z)
-
+        
+            # XXX is it necessary to do this again?
             # Loss measures generator's ability to fool the discriminator
             g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
