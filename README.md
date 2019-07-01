@@ -11,7 +11,7 @@ python setup.py install
 
 
 
-## Data
+## Data 
 The following command will download and create real images,
 as well as extract statistics.
 Valid options are ``CIFAR`` and ``MNIST``.
