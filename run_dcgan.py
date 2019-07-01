@@ -45,9 +45,20 @@ parser.add_argument("--dataset_name", type=str, default='MNIST',
         help="name of data (MNIST or CIFAR)")
 parser.set_defaults(no_fid_score=False)
 opt = parser.parse_args()
+
+
 if opt.dataset_name == 'CIFAR':
     opt.channels = 3
+    opt.img_size = 32  #we need 64?
+    opt.latent_dim = 100
+if opt.dataset_name == 'MNIST':
+    opt.channels = 1
+    opt.img_size = 32   #img_size needs to be divisible by 16.
+                        #However, MNIST image is 28x28. Do we do zero padding? XXX
+    opt.latent_dim = 100
+    
 print(opt)
+
 
 # XXX Generate output folders
 folder_names = ['images', 'chk', 'fid', 'temp']
@@ -81,7 +92,9 @@ data_folder_name = f'ernesgd_data/{opt.dataset_name}/'
 os.makedirs(data_folder_name, exist_ok=True)
 data_dict = {'MNIST': datasets.MNIST,
         'CIFAR': datasets.CIFAR10}
+
 selected_dataset = data_dict[opt.dataset_name]
+#transforms.Resize changes the image dimension
 dataloader = torch.utils.data.DataLoader(
     selected_dataset(data_folder_name,
                      train=True,
